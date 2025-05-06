@@ -8,16 +8,11 @@ import br.dev.gabriel.classificadora.model.CalculoMascaraBinario;
 public class main {
 
 	public static void main(String[] args) {
-		System.out.println("Qual o IP você vai calcular?");
+		System.out.println("Digite um ip seguido de um CIDR (Ex: 192.168.1.1/24)");
 		Scanner leitor = new Scanner(System.in);
 		String ip = leitor.nextLine();
-		System.out.println("Agora me diga a Mascara: ");
-		String mascara = leitor.nextLine();
 		
 		CalculoClasse cla = new CalculoClasse();
 		cla.EncontraClasse(ip);
-		
-		CalculoMascaraBinario masc = new CalculoMascaraBinario();
-		masc.TransformaBinario(mascara);
 	}
 }
