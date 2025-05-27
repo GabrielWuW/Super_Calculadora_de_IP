@@ -1,35 +1,42 @@
 package br.dev.gabriel.classificadora.model;
 
 public class CalculosIp {
-    public void EncontraClasse(String ipComCidr, String subRedes) {
-        String[] cidrParts = ipComCidr.split("/");  // Separando IP e CIDR
+
+    public void EncontraClasse(String ipComCidr) {
+        String[] cidrParts = ipComCidr.split("/");
         String ip = cidrParts[0];
         String cidr = cidrParts[1];
+        String classe;
 
         String[] ipSeparado = ip.split("\\.");
         int primeiraCasa = Integer.parseInt(ipSeparado[0]);
+        System.out.println("=================================");
 
-        // Classificação do IP e ajuste do CIDR conforme a classe
+        int cidrPadraoClasse = 0;
         if (primeiraCasa >= 1 && primeiraCasa <= 127) {
-            System.out.println("Seu IP é de classe A");
-            cidr = ajustarCidrParaClasse(cidr, 8);  // Classe A recomenda CIDR mínimo 8
+            System.out.println("Seu IP � de classe A");
+            classe = "A";
+            cidrPadraoClasse = 8;
         } else if (primeiraCasa >= 128 && primeiraCasa <= 191) {
-            System.out.println("Seu IP é de classe B");
-            cidr = ajustarCidrParaClasse(cidr, 16);  // Classe B recomenda CIDR mínimo 16
+            System.out.println("Seu IP � de classe B");
+            classe = "B";
+            cidrPadraoClasse = 16;
         } else if (primeiraCasa >= 192 && primeiraCasa <= 223) {
-            System.out.println("Seu IP é de classe C");
-            cidr = ajustarCidrParaClasse(cidr, 24);  // Classe C recomenda CIDR mínimo 24
+            System.out.println("Seu IP � de classe C");
+            classe = "C";
+            cidrPadraoClasse = 24;
         } else {
-            System.out.println("Não sei que tipo de IP é esse.");
+            System.out.println("N�o sei que tipo de IP � esse...");
+            classe = " ";
             return;
         }
-        
-        // Calculando e exibindo máscara de rede
+
         exibirInfoMascara(cidr);
 
-        // Calculando as sub-redes com base no CIDR ajustado e na quantidade de sub-redes
+        calcularIpsTotaisSemSubRede(cidrPadraoClasse, classe);
+
         CalculosSubRede sub = new CalculosSubRede();
-        sub.calcularSubRedes(ip, cidr, Integer.parseInt(subRedes));
+        sub.calcularSubRedes(ip, cidr, classe);
     }
 
     private void exibirInfoMascara(String cidr) {
@@ -38,22 +45,24 @@ public class CalculosIp {
 
         int cidrNumero = Integer.parseInt(cidr);
         int bitsHost = 32 - cidrNumero;
-        int totalIPs = (int) Math.pow(2, bitsHost);
-        int IpsDisponiveis = totalIPs - 2;
+        long totalIPs = (long) Math.pow(2, bitsHost);
+        long IpsDisponiveis = totalIPs - 2;
 
-        System.out.println("Total de IPs disponíveis: " + IpsDisponiveis);
+        System.out.println("Total de IPs dispon�veis por Sub-Rede: " + IpsDisponiveis);
     }
 
-    // Método para ajustar o CIDR conforme a classe do IP
-    private String ajustarCidrParaClasse(String cidr, int cidrMinimo) {
-        int cidrInt = Integer.parseInt(cidr);
-        
-        // Se o CIDR for menor que o valor mínimo recomendado para a classe, ajusta
-        if (cidrInt < cidrMinimo) {
-            System.out.println("CIDR fornecido é menor que o mínimo recomendado para a classe. Ajustando CIDR para " + cidrMinimo + ".");
-            return String.valueOf(cidrMinimo);  // Retorna o CIDR ajustado para o valor mínimo recomendado
+    private void calcularIpsTotaisSemSubRede(int cidrPadraoClasse, String classe) {
+        if (cidrPadraoClasse == 0) {
+            return;
         }
 
-        return cidr;
+        int bitsHostRedeOriginal = 32 - cidrPadraoClasse;
+        long totalIpsRedeOriginal = (long) Math.pow(2, bitsHostRedeOriginal);
+        long ipsDisponiveisRedeOriginal = totalIpsRedeOriginal - 2;
+
+        System.out.println("---------------------------------");
+        System.out.println("IPs Totais da Rede:");
+        System.out.println("Voc� possui: " + totalIpsRedeOriginal + " Ips totais e " + ipsDisponiveisRedeOriginal + " Ips dispon�veis");
+        System.out.println("---------------------------------");
     }
 }

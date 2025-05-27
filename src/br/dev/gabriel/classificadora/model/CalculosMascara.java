@@ -27,8 +27,8 @@ public class CalculosMascara {
         String mascaraDecimal = octetos[0] + "." + octetos[1] + "." + octetos[2] + "." + octetos[3];
         String mascaraBinaria = String.join(".", grupos);
 
-        System.out.println("M√°scara decimal: " + mascaraDecimal);
-        System.out.println("M√°scara bin√°rio: " + mascaraBinaria);
+        System.out.println("M·scara decimal: " + mascaraDecimal);
+        System.out.println("M·scara bin·rio: " + mascaraBinaria);
         
     }
 }
