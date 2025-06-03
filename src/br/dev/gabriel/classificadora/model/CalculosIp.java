@@ -1,68 +1,100 @@
 package br.dev.gabriel.classificadora.model;
 
+import java.util.List;
+
 public class CalculosIp {
+    private String classe;
+    private int cidrPadraoClasse;
+    private int cidrUsuario;
+    private long totalIpsRedeOriginal;
+    private long ipsDisponiveisSubRede;
+    private int subRedesExistentes;
+    private List<String> detalhesSubRedes;
+
+    // Novos atributos para armazenar as mÃ¡scaras
+    private String mascaraDecimal;
+    private String mascaraBinaria;
 
     public void EncontraClasse(String ipComCidr) {
         String[] cidrParts = ipComCidr.split("/");
         String ip = cidrParts[0];
         String cidr = cidrParts[1];
-        String classe;
+        cidrUsuario = Integer.parseInt(cidr);
 
         String[] ipSeparado = ip.split("\\.");
         int primeiraCasa = Integer.parseInt(ipSeparado[0]);
-        System.out.println("=================================");
 
-        int cidrPadraoClasse = 0;
+        // Definir classe e CIDR padrÃ£o da classe
         if (primeiraCasa >= 1 && primeiraCasa <= 127) {
-            System.out.println("Seu IP é de classe A");
             classe = "A";
             cidrPadraoClasse = 8;
         } else if (primeiraCasa >= 128 && primeiraCasa <= 191) {
-            System.out.println("Seu IP é de classe B");
             classe = "B";
             cidrPadraoClasse = 16;
         } else if (primeiraCasa >= 192 && primeiraCasa <= 223) {
-            System.out.println("Seu IP é de classe C");
             classe = "C";
             cidrPadraoClasse = 24;
         } else {
-            System.out.println("Não sei que tipo de IP é esse...");
-            classe = " ";
+            classe = "Desconhecida";
             return;
         }
 
-        exibirInfoMascara(cidr);
+        int bitsHost = 32 - cidrUsuario;
+        totalIpsRedeOriginal = (long) Math.pow(2, bitsHost);
+        ipsDisponiveisSubRede = totalIpsRedeOriginal - 2;
 
-        calcularIpsTotaisSemSubRede(cidrPadraoClasse, classe);
-
+        // Calcular detalhes das sub-redes
         CalculosSubRede sub = new CalculosSubRede();
-        sub.calcularSubRedes(ip, cidr, classe);
-    }
+        detalhesSubRedes = sub.calcularSubRedesDetalhadas(ip, cidr, classe);
 
-    private void exibirInfoMascara(String cidr) {
-        CalculosMascara cal = new CalculosMascara();
-        cal.TransformaBinario(cidr);
-
-        int cidrNumero = Integer.parseInt(cidr);
-        int bitsHost = 32 - cidrNumero;
-        long totalIPs = (long) Math.pow(2, bitsHost);
-        long IpsDisponiveis = totalIPs - 2;
-
-        System.out.println("Total de IPs disponíveis por Sub-Rede: " + IpsDisponiveis);
-    }
-
-    private void calcularIpsTotaisSemSubRede(int cidrPadraoClasse, String classe) {
-        if (cidrPadraoClasse == 0) {
-            return;
+        if (cidrUsuario > cidrPadraoClasse) {
+            subRedesExistentes = (int) Math.pow(2, cidrUsuario - cidrPadraoClasse);
+        } else {
+            subRedesExistentes = 0;
         }
 
-        int bitsHostRedeOriginal = 32 - cidrPadraoClasse;
-        long totalIpsRedeOriginal = (long) Math.pow(2, bitsHostRedeOriginal);
-        long ipsDisponiveisRedeOriginal = totalIpsRedeOriginal - 2;
+        // Aqui fazemos o cÃ¡lculo da mÃ¡scara usando CalculosMascara
+        CalculosMascara calcMascara = new CalculosMascara();
+        calcMascara.TransformaBinario(cidr);
+        mascaraDecimal = calcMascara.getMascaraDecimal();
+        mascaraBinaria = calcMascara.getMascaraBinaria();
+    }
 
-        System.out.println("---------------------------------");
-        System.out.println("IPs Totais da Rede:");
-        System.out.println("Você possui: " + totalIpsRedeOriginal + " Ips totais e " + ipsDisponiveisRedeOriginal + " Ips disponíveis");
-        System.out.println("---------------------------------");
+    // Getters para os novos atributos
+    public String getMascaraDecimal() {
+        return mascaraDecimal;
+    }
+
+    public String getMascaraBinaria() {
+        return mascaraBinaria;
+    }
+
+    // Getters existentes
+    public String getClasse() {
+        return classe;
+    }
+
+    public int getCidrPadraoClasse() {
+        return cidrPadraoClasse;
+    }
+
+    public int getCidrUsuario() {
+        return cidrUsuario;
+    }
+
+    public long getTotalIpsRedeOriginal() {
+        return totalIpsRedeOriginal;
+    }
+
+    public long getIpsDisponiveisSubRede() {
+        return ipsDisponiveisSubRede;
+    }
+
+    public int getSubRedesExistentes() {
+        return subRedesExistentes;
+    }
+
+    public List<String> getDetalhesSubRedes() {
+        return detalhesSubRedes;
     }
 }

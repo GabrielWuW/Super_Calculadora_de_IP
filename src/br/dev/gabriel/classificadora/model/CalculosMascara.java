@@ -1,8 +1,27 @@
 package br.dev.gabriel.classificadora.model;
 
 public class CalculosMascara {
-	public void TransformaBinario(String cidr) {
 
+    private String mascaraDecimal;
+    private String mascaraBinaria;
+
+    public String getMascaraDecimal() {
+        return mascaraDecimal;
+    }
+
+    public void setMascaraDecimal(String mascaraDecimal) {
+        this.mascaraDecimal = mascaraDecimal;
+    }
+
+    public String getMascaraBinaria() {
+        return mascaraBinaria;
+    }
+
+    public void setMascaraBinaria(String mascaraBinaria) {
+        this.mascaraBinaria = mascaraBinaria;
+    }
+
+    public void TransformaBinario(String cidr) {
         int cidrNumero = Integer.parseInt(cidr);
         StringBuilder parteUm = new StringBuilder();
 
@@ -24,11 +43,7 @@ public class CalculosMascara {
             octetos[i] = Integer.parseInt(grupos[i], 2);
         }
 
-        String mascaraDecimal = octetos[0] + "." + octetos[1] + "." + octetos[2] + "." + octetos[3];
-        String mascaraBinaria = String.join(".", grupos);
-
-        System.out.println("Máscara decimal: " + mascaraDecimal);
-        System.out.println("Máscara binário: " + mascaraBinaria);
-        
+        this.mascaraDecimal = octetos[0] + "." + octetos[1] + "." + octetos[2] + "." + octetos[3];
+        this.mascaraBinaria = String.join(".", grupos);
     }
 }
