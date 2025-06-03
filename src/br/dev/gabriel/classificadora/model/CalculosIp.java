@@ -3,29 +3,42 @@ package br.dev.gabriel.classificadora.model;
 import java.util.List;
 
 public class CalculosIp {
+
     private String classe;
     private int cidrPadraoClasse;
     private int cidrUsuario;
     private long totalIpsRedeOriginal;
     private long ipsDisponiveisSubRede;
     private int subRedesExistentes;
-    private List<String> detalhesSubRedes;
+    private List<String[]> detalhesSubRedes;
 
-    // Novos atributos para armazenar as m√°scaras
     private String mascaraDecimal;
     private String mascaraBinaria;
 
-    public void EncontraClasse(String ipComCidr) {
+    public void encontraClasse(String ipComCidr) {
         String[] cidrParts = ipComCidr.split("/");
+
+        if (cidrParts.length != 2) {
+            throw new IllegalArgumentException("Formato inv·lido. Use o formato IP/CIDR, ex: 192.168.0.0/24");
+        }
+
         String ip = cidrParts[0];
-        String cidr = cidrParts[1];
-        cidrUsuario = Integer.parseInt(cidr);
+        String cidrStr = cidrParts[1];
+
+        try {
+            cidrUsuario = Integer.parseInt(cidrStr);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("CIDR inv·lido: " + cidrStr);
+        }
 
         String[] ipSeparado = ip.split("\\.");
+        if (ipSeparado.length != 4) {
+            throw new IllegalArgumentException("IP inv·lido: " + ip);
+        }
+
         int primeiraCasa = Integer.parseInt(ipSeparado[0]);
 
-        // Definir classe e CIDR padr√£o da classe
-        if (primeiraCasa >= 1 && primeiraCasa <= 127) {
+        if (primeiraCasa >= 1 && primeiraCasa <= 126) {
             classe = "A";
             cidrPadraoClasse = 8;
         } else if (primeiraCasa >= 128 && primeiraCasa <= 191) {
@@ -36,40 +49,38 @@ public class CalculosIp {
             cidrPadraoClasse = 24;
         } else {
             classe = "Desconhecida";
-            return;
+            throw new IllegalArgumentException("IP n„o pertence ‡s classes A, B ou C");
         }
 
-        int bitsHost = 32 - cidrUsuario;
+        // Calcula total IPs na rede original (com base no CIDR padr„o da classe)
+        int bitsHost = 32 - cidrPadraoClasse;
         totalIpsRedeOriginal = (long) Math.pow(2, bitsHost);
-        ipsDisponiveisSubRede = totalIpsRedeOriginal - 2;
 
-        // Calcular detalhes das sub-redes
-        CalculosSubRede sub = new CalculosSubRede();
-        detalhesSubRedes = sub.calcularSubRedesDetalhadas(ip, cidr, classe);
+        // Calcula total IPs na sub-rede (baseado no CIDR informado)
+        int bitsSubRede = 32 - cidrUsuario;
+        long totalIpsSubRede = (long) Math.pow(2, bitsSubRede);
 
+        // IPs utiliz·veis em cada sub-rede (remove rede e broadcast)
+        ipsDisponiveisSubRede = totalIpsSubRede - 2;
+
+        // Quantidade de sub-redes possÌveis (se houve subnetting)
         if (cidrUsuario > cidrPadraoClasse) {
             subRedesExistentes = (int) Math.pow(2, cidrUsuario - cidrPadraoClasse);
         } else {
             subRedesExistentes = 0;
         }
 
-        // Aqui fazemos o c√°lculo da m√°scara usando CalculosMascara
+        // Agora chamamos CalculosSubRede com tipos corretos: ip (String), cidrOriginal (int), novoCidr (int)
+        CalculosSubRede sub = new CalculosSubRede();
+        detalhesSubRedes = sub.calcularSubRedesDetalhadas(ip, cidrPadraoClasse, cidrUsuario);
+
+        // Calcula as m·scaras decimal e bin·ria
         CalculosMascara calcMascara = new CalculosMascara();
-        calcMascara.TransformaBinario(cidr);
+        calcMascara.TransformaBinario(cidrStr);
         mascaraDecimal = calcMascara.getMascaraDecimal();
         mascaraBinaria = calcMascara.getMascaraBinaria();
     }
 
-    // Getters para os novos atributos
-    public String getMascaraDecimal() {
-        return mascaraDecimal;
-    }
-
-    public String getMascaraBinaria() {
-        return mascaraBinaria;
-    }
-
-    // Getters existentes
     public String getClasse() {
         return classe;
     }
@@ -83,7 +94,7 @@ public class CalculosIp {
     }
 
     public long getTotalIpsRedeOriginal() {
-        return totalIpsRedeOriginal;
+        return totalIpsRedeOriginal;  // Corrigido para retornar o valor j· calculado corretamente
     }
 
     public long getIpsDisponiveisSubRede() {
@@ -94,7 +105,15 @@ public class CalculosIp {
         return subRedesExistentes;
     }
 
-    public List<String> getDetalhesSubRedes() {
+    public List<String[]> getDetalhesSubRedes() {
         return detalhesSubRedes;
+    }
+
+    public String getMascaraDecimal() {
+        return mascaraDecimal;
+    }
+
+    public String getMascaraBinaria() {
+        return mascaraBinaria;
     }
 }

@@ -1,72 +1,55 @@
 package br.dev.gabriel.classificadora.model;
 
+import org.apache.commons.net.util.SubnetUtils;
+import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class CalculosSubRede {
 
-    public List<String> calcularSubRedesDetalhadas(String ipBase, String cidrOriginal, String classe) {
-        List<String> detalhes = new ArrayList<>();
-        int subRedesExistentes = 0;
-        int cidr = Integer.parseInt(cidrOriginal);
+	public List<String[]> calcularSubRedesDetalhadas(String ipBase, int cidrOriginal, int novoCidr) {
+	    List<String[]> subredes = new ArrayList<>();
 
-        int base = 0;
-        if (classe.equalsIgnoreCase("A")) {
-            base = 8;
-        } else if (classe.equalsIgnoreCase("B")) {
-            base = 16;
-        } else if (classe.equalsIgnoreCase("C")) {
-            base = 24;
-        } else {
-            detalhes.add("Classe invÃ¡lida.");
-            return detalhes;
-        }
+	    int numSubredes = (int) Math.pow(2, novoCidr - cidrOriginal);
 
-        int bitsEmprestados = cidr - base;
-        if (bitsEmprestados > 0) {
-            subRedesExistentes = (int) Math.pow(2, bitsEmprestados);
-            detalhes.add("VocÃª pode ter " + subRedesExistentes + " Sub-redes");
-        } else {
-            detalhes.add("VocÃª nÃ£o possui Sub-Redes...");
-            return detalhes;
-        }
+	    String[] octetos = ipBase.split("\\.");
+	    int[] base = new int[] {
+	        Integer.parseInt(octetos[0]),
+	        Integer.parseInt(octetos[1]),
+	        Integer.parseInt(octetos[2]),
+	        Integer.parseInt(octetos[3])
+	    };
 
-        int ipIntBase = ipToInt(ipBase);
-        int mask = ~((1 << (32 - cidr)) - 1);
-        int ipDeRede = ipIntBase & mask;
-        int tamanhoBloco = (int) Math.pow(2, 32 - cidr);
+	    int ipsPorSubrede = (int) Math.pow(2, 32 - novoCidr);
 
-        detalhes.add("Cada sub-rede possui " + tamanhoBloco + " IPs totais.");
-        detalhes.add("IPs utilizÃ¡veis por sub-rede: " + (tamanhoBloco - 2));
+	    for (int i = 0; i < numSubredes; i++) {
+	        int totalIp = i * ipsPorSubrede;
+	        int[] ipSubRede = base.clone();
+	        ipSubRede[3] += totalIp;
 
-        for (int i = 0; i < subRedesExistentes; i++) {
-            int inicio = ipDeRede + (i * tamanhoBloco);
-            int fim = inicio + tamanhoBloco - 1;
+	        for (int j = 3; j > 0; j--) {
+	            if (ipSubRede[j] > 255) {
+	                ipSubRede[j - 1] += ipSubRede[j] / 256;
+	                ipSubRede[j] %= 256;
+	            }
+	        }
 
-            detalhes.add("Sub-rede " + (i + 1) + ":");
-            detalhes.add("IP de Rede:     " + intToIp(inicio));
-            detalhes.add("Primeiro IP:    " + intToIp(inicio + 1));
-            detalhes.add("Ãšltimo IP:      " + intToIp(fim - 1));
-            detalhes.add("IP de Broadcast:" + intToIp(fim));
-            detalhes.add("-------------------------------");
-        }
+	        String subRedeIp = String.format("%d.%d.%d.%d", ipSubRede[0], ipSubRede[1], ipSubRede[2], ipSubRede[3]);
+	        SubnetUtils utils = new SubnetUtils(subRedeIp + "/" + novoCidr);
+	        utils.setInclusiveHostCount(true);
+	        SubnetInfo info = utils.getInfo();
 
-        return detalhes;
-    }
+	        subredes.add(new String[] {
+	            "Sub-rede: " + info.getCidrSignature(),
+	            "Endereço de rede: " + info.getNetworkAddress(),
+	            "Broadcast: " + info.getBroadcastAddress(),
+	            "Primeiro IP utilizável: " + info.getLowAddress(),
+	            "Último IP utilizável: " + info.getHighAddress(),
+	            "IPs utilizáveis por sub-rede: " + (info.getAddressCountLong() - 2)
+	        });
+	    }
 
-    private int ipToInt(String ip) {
-        String[] partes = ip.trim().split("\\.");
-        int result = 0;
-        for (int i = 0; i < 4; i++) {
-            result |= (Integer.parseInt(partes[i]) << (24 - (8 * i)));
-        }
-        return result;
-    }
-
-    private String intToIp(int ip) {
-        return ((ip >> 24) & 0xFF) + "." +
-               ((ip >> 16) & 0xFF) + "." +
-               ((ip >> 8) & 0xFF) + "." +
-               (ip & 0xFF);
-    }
+	    return subredes;
+	}
 }
