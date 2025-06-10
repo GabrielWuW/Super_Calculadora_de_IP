@@ -148,7 +148,7 @@ public class Ui {
                         ipsPorSubRede.setText("Rede original: " + cla.getTotalIpsRedeOriginal() +
                                               " IPs totais, " + cla.getIpsDisponiveisSubRede() + " utilizáveis");
                     } else {
-                        ipsPorSubRede.setText("Por sub-rede: " + cla.getTotalIpsRedeOriginal() +
+                        ipsPorSubRede.setText(cla.getTotalIpsRedeOriginal() +
                                               " IPs totais, " + cla.getIpsDisponiveisSubRede() + " utilizáveis");
                     }
 
