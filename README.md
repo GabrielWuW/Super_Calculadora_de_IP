@@ -1,6 +1,6 @@
 # Calculadora de IPs
 
-![](https://drive.google.com/file/d/1D0dcbVRl73GqbqVJEcDrW_SrtLFB4XkI/preview)
+![](foto.png)
 
 Calculadora de IPs desenvolvida para o curso de desenvolvimento de sistemas da escola SENAI Jandira
 
